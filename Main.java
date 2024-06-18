@@ -27,26 +27,32 @@ public class Main {
 
             if (input.equals("help")) {
                 printCommands();
+                continue;
             }
 
             if (input.startsWith("ls ")) {
                 FileSystem.listDirectory(input.substring("ls ".length()));
+                continue;
             }
 
             if (input.startsWith("ls_py ")) {
                 FileSystem.listPythonFiles(input.substring("ls_py ".length()));
+                continue;
             }
 
             if (input.startsWith("is_dir ")) {
                 FileSystem.isDirectory(input.substring("is_dir ".length()));
+                continue;
             }
 
             if (input.startsWith("define ")) {
                 FileSystem.define(input.substring("define ".length()));
+                continue;
             }
 
             if (input.startsWith("readmod ")) {
                 FileSystem.printPermissions(input.substring("readmod ".length()));
+                continue;
             }
 
             if (input.startsWith("setmod ")) {
@@ -58,19 +64,25 @@ public class Main {
                 String path = command[0];
                 String param = command[1];
                 FileSystem.setPermissions(path, param);
+                continue;
             }
             if (input.startsWith("cat ")) {
                 FileSystem.printContent(input.substring("cat ".length()));
+                continue;
             }
             if (input.startsWith("append ")) {
                 FileSystem.appendFooter(input.substring("append ".length()));
+                continue;
             }
             if (input.startsWith("bc ")) {
                 FileSystem.createBackup(input.substring("bc ".length()));
+                continue;
             }
             if (input.startsWith("greplong ")) {
                 FileSystem.grepLong(input.substring("greplong ".length()));
+                continue;
             }
+            System.err.println("Incorrect command!");
 
         } while (!input.equals("exit"));
     }
