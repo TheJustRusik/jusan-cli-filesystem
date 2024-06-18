@@ -52,7 +52,7 @@ public class Main {
             if (input.startsWith("setmod ")) {
                 String[] command = input.substring("setmod ".length()).split(" ");
                 if (command.length != 2) {
-                    System.err.println("Incorrect syntax. Use: setmod <path> <param> Example: setmod /home/user/file.txt rwx");
+                    System.err.println("Incorrect syntax. Use: setmod <path> <param> Example: \"setmod /home/user/file.txt rwx\" \"setmod /home/user/file.txt nothing\" ");
                     continue;
                 }
                 String path = command[0];

@@ -1,110 +1,102 @@
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Date;
 
 public class FileSystem {
     public static void listDirectory(String path) {
         File file = new File(path);
         File[] files = file.listFiles();
         if (files == null) {
-            System.err.println("No such file or directory");
+            System.err.println("No such file or directory: " + path);
             return;
         }
+        StringBuilder result = new StringBuilder();
         for (File value : files) {
-            System.out.print(value.getName() + " ");
+            result.append(value.getName()).append(" ");
         }
-        System.out.println();
+        System.out.println(result.toString().trim());
     }
+
 
     public static void listPythonFiles(String path) {
         File file = new File(path);
         File[] files = file.listFiles();
         if (files == null) {
-            System.err.println("No such file or directory");
+            System.err.println("No such file or directory: " + path);
             return;
         }
+        StringBuilder result = new StringBuilder();
         for (File value : files) {
             if (value.isFile() && value.getName().endsWith(".py")) {
-                System.out.print(value.getName() + " ");
+                result.append(value.getName()).append(" ");
             }
         }
-        System.out.println();
+        System.out.println(result.toString().trim());
     }
 
     public static void isDirectory(String path) {
         File file = new File(path);
         if (!file.exists()) {
-            System.err.println("Directory does not exist");
+            System.err.println("Directory does not exist: " + path);
             return;
         }
-        if (file.isDirectory()) {
-            System.out.println("true");
-        }else {
-            System.out.println("false");
-        }
+        System.out.println(file.isDirectory());
     }
 
     public static void define(String path) {
         File file = new File(path);
         if (!file.exists()) {
-            System.err.println("Directory does not exist");
+            System.err.println("File or directory does not exist: " + path);
             return;
         }
         if (file.isDirectory()) {
             System.out.println("Директория");
-        }else {
+        } else {
             System.out.println("Файл");
         }
     }
 
-    public static void printPermissions(String substring) {
-        File file = new File(substring);
+    public static void printPermissions(String path) {
+        File file = new File(path);
         if (!file.exists()) {
-            System.err.println("Directory or file does not exist");
+            System.err.println("File or directory does not exist: " + path);
             return;
         }
-        String response = "";
-        if(file.canRead()) {
-            response += "r";
-        }else {
-            response += "-";
-        }
-        if(file.canWrite()) {
-            response += "w";
-        }else {
-            response += "-";
-        }
-        if(file.canExecute()) {
-            response += "x";
-        }else {
-            response += "-";
-        }
-        System.out.println(response);
+        String permissions =
+                (file.canRead() ? "r" : "-") +
+                (file.canWrite() ? "w" : "-") +
+                (file.canExecute() ? "x" : "-");
+        System.out.println(permissions);
     }
+
     public static void setPermissions(String path, String permissions) {
         File file = new File(path);
         if (!file.exists()) {
-            System.err.println("Directory or file does not exist");
+            System.err.println("File or directory does not exist: " + path);
             return;
         }
-        file.setWritable(false);
         file.setReadable(false);
+        file.setWritable(false);
         file.setExecutable(false);
         for (char c : permissions.toCharArray()) {
-            if (c == 'r') {
-                System.out.print(file.setReadable(true) ? "+r " : "Can't set readable ");
-            }else if (c == 'w') {
-                System.out.print(file.setWritable(true) ? "+w " : "Can't set writeable ");
-            }else if (c == 'x') {
-                System.out.print(file.setExecutable(true) ? "+x " : "Can't set executable ");
+            switch (c) {
+                case 'r':
+                    System.out.print(file.setReadable(true) ? "+r " : "Can't set readable ");
+                    break;
+                case 'w':
+                    System.out.print(file.setWritable(true) ? "+w " : "Can't set writable ");
+                    break;
+                case 'x':
+                    System.out.print(file.setExecutable(true) ? "+x " : "Can't set executable ");
+                    break;
             }
         }
         System.out.println();
     }
+
     public static void printContent(String path) {
         File file = new File(path);
         if (!file.exists()) {
@@ -116,12 +108,10 @@ public class FileSystem {
             return;
         }
         if (file.canRead()) {
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader(file));
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 reader.lines().forEach(System.out::println);
-            } catch (FileNotFoundException e) {
+            } catch (IOException e) {
                 System.err.println("File does not exist");
-
             }
         }else {
             System.err.println("No permissions for read");
@@ -141,10 +131,8 @@ public class FileSystem {
             System.err.println("Can't write to file: No permissions");
             return;
         }
-        try {
-            PrintWriter writer = new PrintWriter(new FileWriter(file, true));
+        try (PrintWriter writer = new PrintWriter(new FileWriter(file, true))) {
             writer.println("# Autogenerated line");
-            writer.close();
         } catch (IOException e) {
             System.out.println("Can't write to file: " + e.getMessage());
         }
@@ -152,22 +140,25 @@ public class FileSystem {
     public static void createBackup(String path) {
         File file = new File(path);
         if (!file.exists()) {
-            System.err.println("File does not exist");
+            System.err.println("File does not exist: " + path);
             return;
         }
         if (!file.canRead()) {
-            System.err.println("Can't read file: No permissions");
+            System.err.println("Can't read file: No permissions: " + path);
             return;
         }
 
-        Date currentDate = new Date();
-        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-        String backupPathString = "/tmp/" + dateFormat.format(currentDate) + ".backup";
+        LocalDate currentDate = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        String backupPathString = "/tmp/" + formatter.format(currentDate) + ".backup";
         Path backupPath = Paths.get(backupPathString);
 
         Path sourcePath = Paths.get(path);
-        if(file.isDirectory()) {
-            try {
+        try {
+            if (!Files.exists(backupPath)) {
+                Files.createDirectories(backupPath);
+            }
+            if (file.isDirectory()) {
                 Files.walkFileTree(sourcePath, new SimpleFileVisitor<>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -184,33 +175,29 @@ public class FileSystem {
                         return FileVisitResult.CONTINUE;
                     }
                 });
-            } catch (IOException e) {
-                System.err.println("Can't backup dir: " + e.getMessage());
+            } else {
+                Path backupFilePath = backupPath.resolve(file.getName());
+                Files.copy(sourcePath, backupFilePath, StandardCopyOption.REPLACE_EXISTING);
             }
-        } else {
-            try {
-                Files.copy(sourcePath, backupPath, StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException e) {
-                System.err.println("Can't copy file: " + e.getMessage());
-            }
+        } catch (IOException e) {
+            System.err.println("Can't backup file: " + e.getMessage());
         }
-
     }
     public static void grepLong(String path) {
         File file = new File(path);
         if (!file.exists()) {
-            System.err.println("File does not exist");
+            System.err.println("File does not exist: " + path);
             return;
         }
         if (file.isDirectory()) {
-            System.err.println("This is a directory");
+            System.err.println("This is a directory: " + path);
             return;
         }
         if (!file.canRead()) {
-            System.err.println("Can't read file: No permissions");
+            System.err.println("Can't read file: No permissions: " + path);
             return;
         }
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))){
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             var ref = new Object() {
                 String longestWord = "";
             };
@@ -227,4 +214,5 @@ public class FileSystem {
             System.err.println("Can't process operation: " + e.getMessage());
         }
     }
+
 }
